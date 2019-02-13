@@ -109,7 +109,6 @@ Generate GTF files in a ballgown folder.
 Run python script provided by StringTie to generate 2 CSV files containing the count matrices for genes and transcripts.
 
     module load python/2.7.10
-    
     python prepDE.py -i ballgown -g gene_count_matrix.csv -t transcript_count_matrix.csv
         
 ## 8. Differential gene expression analyses using EdgeR
