@@ -1,108 +1,48 @@
 # Analysis pipeline used to generate Figure S3
 
-################################################################################
-#
-##   1. Trimming with TrimGalore
-#
-################################################################################
+## 1. Trim with TrimGalore
     
-### Trim reads using TrimGalore default settings.
+Trim reads using TrimGalore default settings.
     
     while read line || [ -n "$line" ];
     do
     	read1=$(echo $line | awk '{print $1}')
     	read2=$(echo $line | awk '{print $2}')
     
-    trim_galore \
-    	--fastqc_args "--noextract --nogroup" \
-    	--output_dir /data/kelley/projects/kerry/mx_rna_seq/1_trimgalore \
-    	--paired /data/kelley/projects/pmex/field2010/$read1 /data/kelley/projects/pmex/field2010/$read2
+    trim_galore --fastqc_args "--noextract --nogroup" --output_dir <path to output directory> --paired $read1 $read2
     
-    done < /data/kelley/projects/kerry/mx_rna_seq/1_trimgalore/scripts/MXsample_list.txt
+    done < <path to sample list>.txt
     
-    # Top rows of MXsample_list.txt
-    
-    MX02_1.q33.fastq.gz	MX02_2.q33.fastq.gz
-    MX03_1.q33.fastq.gz	MX03_2.q33.fastq.gz
-    MX04_1.q33.fastq.gz	MX04_2.q33.fastq.gz
-    MX05_1.q33.fastq.gz	MX05_2.q33.fastq.gz
+    # Top rows of sample list text file
+    sample1_read1.fastq.gz	sample1_read2.fastq.gz
+    sample2_read1.fastq.gz	sample2_read2.fastq.gz
+    sample3_read1.fastq.gz	sample3_read2.fastq.gz
 
-################################################################################
-#
-## Pre-processing with Cufflinks gffread
-#
-################################################################################
+## 2. Pre-process with Cufflinks gffread
 
-#### Change the GFF file into a GTF file otherwise it won't work with the HISAT2 python script in the next step
+Change the reference genome GFF file into a GTF file otherwise it won't work with the HISAT2 python script in the next step.
      
-     gffread GCF_001443325.1_P_mexicana-1.0_genomic_copy.gff -T -o GCF_001443325.1_P_mexicana-1.0_genomic_copy.gtf
-     
-     mv GCF_001443325.1_P_mexicana-1.0_genomic_copy.gtf GCF_001443325.1_P_mexicana-1.0_genomic.gtf
-     
-     chmod g+x GCF_001443325.1_P_mexicana-1.0_genomic.gtf
+     gffread <gff_in> -T -o reference.gtf
 
-## Indexing the reference genome with HISAT2
+## 3. Index the reference genome with HISAT2
 
-    # Need to make fiiles using python scripts provided by HISAT2 for the --ss and --exon options
+Make fiiles using python scripts provided by HISAT2 for the --ss and --exon options.
 
-##### Script is /data/kelley/projects/kerry/mx_rna_seq/2_hisat2/scripts/hisat2_extract_splice_sites.sh 
-
-    #!/bin/bash
-    #SBATCH --job-name=extract
-    #SBATCH --partition=kamiak
-    #SBATCH --output=/data/kelley/projects/kerry/mx_rna_seq/2_hisat2/scripts/extract.out
-    #SBATCH --error=/data/kelley/projects/kerry/mx_rna_seq/2_hisat2/scripts/extract.err
-    #SBATCH --workdir=/data/kelley/projects/kerry/mx_rna_seq/2_hisat2
-    #SBATCH --mail-user=kerry.mcgowan@wsu.edu
-    #SBATCH --mail-type=BEGIN,END,FAIL
-    
-    # PURPOSE: Extract splice sites from pmex GFF file prior to building the index.
+Extract splice sites from reference GTF file prior to building the index:
     
     module load python/2.7.10
     
-    /data/kelley/projects/programs/hisat2-2.1.0/hisat2_extract_splice_sites.py \
-    /data/kelley/projects/anthonys_projects/pmex_genome_resequencing/reference_genome_pmex/GCF_001443325.1_P_mexicana-1.0_genomic.gtf \
-    > /data/kelley/projects/kerry/mx_rna_seq/2_hisat2/splice_sites.txt
+    hisat2_extract_splice_sites.py <gtf_in> > splice_sites.txt
 
-##### Script is /data/kelley/projects/kerry/mx_rna_seq/2_hisat2/scripts/hisat2_extract_exons.sh 
-
-    #!/bin/bash
-    #SBATCH --job-name=extract2
-    #SBATCH --partition=kamiak
-    #SBATCH --output=/data/kelley/projects/kerry/mx_rna_seq/2_hisat2/scripts/extract2.out
-    #SBATCH --error=/data/kelley/projects/kerry/mx_rna_seq/2_hisat2/scripts/extract2.err
-    #SBATCH --workdir=/data/kelley/projects/kerry/mx_rna_seq/2_hisat2
-    #SBATCH --mail-user=kerry.mcgowan@wsu.edu
-    #SBATCH --mail-type=BEGIN,END,FAIL
-    
-    # PURPOSE: Extract exons from pmex GFF file prior to building the index.
+Also extract exons from pmex GTF file prior to building the index.
     
     module load python/2.7.10
     
-    /data/kelley/projects/programs/hisat2-2.1.0/hisat2_extract_exons.py \
-    /data/kelley/projects/anthonys_projects/pmex_genome_resequencing/reference_genome_pmex/GCF_001443325.1_P_mexicana-1.0_genomic.gtf \
-    > /data/kelley/projects/kerry/mx_rna_seq/2_hisat2/exons.txt
+    hisat2_extract_exons.py <gtf_in> > exons.txt
 
-##### Script is /data/kelley/projects/kerry/mx_rna_seq/2_hisat2/scripts/index_the_reference_genome.sh
-
-    #!/bin/bash
-    #SBATCH --job-name=index
-    #SBATCH --partition=kamiak
-    #SBATCH --nodes=1
-    #SBATCH --mem=150G    ### Amount of memory
-    #SBATCH --output=/data/kelley/projects/kerry/mx_rna_seq/2_hisat2/scripts/index.out
-    #SBATCH --error=/data/kelley/projects/kerry/mx_rna_seq/2_hisat2/scripts/index.err
-    #SBATCH --workdir=/data/kelley/projects/kerry/mx_rna_seq/2_hisat2
-    #SBATCH --mail-user=kerry.mcgowan@wsu.edu
-    #SBATCH --mail-type=BEGIN,END,FAIL
+Build an index using the reference genome.
     
-    # PURPOSE: Builds an index for the reference genome.
-    
-    hisat2-build \
-    	-f /data/kelley/projects/anthonys_projects/pmex_genome_resequencing/reference_genome_pmex/GCF_001443325.1_P_mexicana-1.0_genomic.fa \
-    	--ss /data/kelley/projects/kerry/mx_rna_seq/2_hisat2/splice_sites.txt \
-    	--exon /data/kelley/projects/kerry/mx_rna_seq/2_hisat2/exons.txt \
-    	/data/kelley/projects/anthonys_projects/pmex_genome_resequencing/reference_genome_pmex/GCF_001443325.1_P_mexicana-1.0_genomic
+    hisat2-build -f <reference_in> --ss splice_sites.txt --exon exons.txt <ht2_base>
 
 ## Mapping using HISAT2
 
