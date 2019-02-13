@@ -85,7 +85,7 @@ Map reads to the previously indexed reference genome.
     sample2
     sample3
 
-## 6. Generating GTF files using StringTie
+## 6. Generate GTF files using StringTie
 
 Generate GTF files in a ballgown folder.
     
@@ -106,7 +106,7 @@ Generate GTF files in a ballgown folder.
     sample2
     sample3
 
-## 7. Generating a gene counts matrix (gene_count_matrix.csv) using prepDE.py (from StringTie)
+## 7. Generate a gene counts matrix (gene_count_matrix.csv) using prepDE.py (from StringTie)
 
 Run python script provided by StringTie to generate 2 CSV files containing the count matrices for genes and transcripts.
 
@@ -118,7 +118,8 @@ Run python script provided by StringTie to generate 2 CSV files containing the c
 
     data <- read.csv("gene_count_matrix.csv", row.names=1)
     
-    # Change column names
+Change column names
+
     names(data)[1] <- "MX02"
     names(data)[2] <- "MX03"
     names(data)[3] <- "MX04"
@@ -155,30 +156,36 @@ Run python script provided by StringTie to generate 2 CSV files containing the c
     names(data)[34] <- "MX76"
     names(data)[35] <- "MX77"
    
-    # Package Installation
+Package installation
+
     source("https://bioconductor.org/biocLite.R")
     biocLite("edgeR")
     biocLite("limma")
     
-    # Load Packages
+Load packages
+
     require("limma")
     require("edgeR")
     
-    # Create grouping factor to be incorporated later into the DGEList, grouped by drainage
+Create grouping factor to be incorporated later into the DGEList, grouped by drainage
+
     group = c(rep("Pich",12),rep("Puya",11),rep("Taco",12))
     
-    # Remove rows where counts = 0 across all samples
+Remove rows where counts = 0 across all samples
+
     total <- data[rowSums(data) > 0,]
 
-    # Creating DGEList object 
+Creating DGEList object 
+
     y <- DGEList(counts=total, group=group)
     
-    # Normalization, creates effective library sizes
+Normalization, creates effective library sizes
+
     y <- calcNormFactors(y)
     
-    # Multidimensional Scaling (MDS) Plot
+Multidimensional Scaling (MDS) Plot
 
-    # top 500 genes
+    # top 500 genes, colored by drainage
     pdf("MDSplot_500genes_colored_by_drainage.pdf")
     par(cex.axis = 1.1, cex = 1.25)
     mds500 <- plotMDS(y, gene.selection = 'common', top = 500, method='logFC', cex=1, 
@@ -193,7 +200,7 @@ Run python script provided by StringTie to generate 2 CSV files containing the c
     print(mds500)
     dev.off()
     
-    # top 10,000 genes
+    # top 10,000 genes, colored by drainage
     pdf("MDSplot_10000genes_colored_by_drainage.pdf")
     par(cex.axis = 1.1, cex = 1.25)
     mds10000 <- plotMDS(y, gene.selection = 'common', top = 10000, method='logFC', cex=1, 
@@ -208,11 +215,8 @@ Run python script provided by StringTie to generate 2 CSV files containing the c
            pt.cex=1.75)
     print(mds10000)
     dev.off()
-    
-    ######################################
-    #### Now separated by S versus NS ####
-    ######################################
-    
+
+    # top 500 genes, colored by sulfidic vs. non-sulfidic
     pdf("MDSplot_500genes_colored_by_habitat.pdf")
     par(cex.axis = 1.1, cex = 1.25)
     mds500 <- plotMDS(y, gene.selection = 'common', top = 500, method='logFC', cex=1, 
@@ -225,6 +229,7 @@ Run python script provided by StringTie to generate 2 CSV files containing the c
     print(mds500)
     dev.off()
     
+    # top 10,000 genes, colored by sulfidic vs. non-sulfidic
     pdf("MDSplot_10000genes_colored_by_habitat.pdf")
     par(cex.axis = 1.1, cex = 1.25)
     mds10000 <- plotMDS(y, gene.selection = 'common', top = 10000, method='logFC', cex=1, 
@@ -237,10 +242,8 @@ Run python script provided by StringTie to generate 2 CSV files containing the c
     print(mds10000)
     dev.off()
     
-    #########################################################################################################################################
-    #### Now split matrices by drainage #####################################################################################################
-    #########################################################################################################################################
-    
+Split dataframes by drainage
+
     # Pichucalco drainage
     pichu <- data[,1:12]
     
@@ -250,58 +253,23 @@ Run python script provided by StringTie to generate 2 CSV files containing the c
     # Tacotalpa drainage
     taco <- data[,24:35]
     
-    ########################################################################################################################
-    #### PICHUCALCO ########################################################################################################
-    ########################################################################################################################
+PICHUCALCO DRAINAGE
     
-    ###################################
-    ####  Create grouping factor  #####
-    ###################################
-    
-    # to be incorporated later into the DGEList
-    
+    # Create grouping factor to be incorporated later into the DGEList
     group_pichu = c(rep("fresh",6),rep("sulfur",6))
     
-    ##########################################################
-    ####  Remove rows where counts = 0 across all samples ####
-    ##########################################################
+    # Remove rows where counts = 0 across all samples
+    total_pichu <- pichu[rowSums(pichu) > 0,]
     
-    dim(pichu)
-    # 31791 genes before removing the 0 counts
-    
-    total_pichu <- pichu[rowSums(pichu) > 0,] # trim out any rows with no reads counts
-    
-    dim(total_pichu)
-    # 24430 genes after removing the 0 counts
-    
-    ###################################
-    ####  Creating DGEList object  ####
-    ###################################
-    
+    # Creating DGEList object
     y_pichu <- DGEList(counts=total_pichu, group=group_pichu)
     
-    #########################
-    ####  Normalization  ####
-    #########################
+    # Normalization, creates effective library sizes
+    y_pichu <- calcNormFactors(y_pichu)
+
+    # Multidimensional Scaling (MDS) Plot
     
-    # Normalization for RNA composition (i.e. prevents genes from appearing falsely downregulated)
-    
-    # Creates effective library sizes
-    
-    y_pichu <- calcNormFactors(y_pichu) # calculates normalization factors to scale raw library sizes, TMM is default method
-    
-    y_pichu$samples # shows library sizes and normalization factors
-    
-    #######################################################
-    ######## Multidimensional Scaling (MDS) Plot  #########
-    #######################################################
-    
-    # gene.selection = 'common' selects the same genes for all comparisons
-    
-    # method='logFC' required with gene.selection argument
-    
-    # top = 500 plots the top 500 genes (this is the default)
-    
+    # top 500 genes, colored by sulfidic vs. non-sulfidic   
     pdf("MDSplot_500genes_PICHU_colored_by_habitat.pdf")
     par(cex.axis = 1.1, cex = 1.25)
     mds500_pichu <- plotMDS(y_pichu, gene.selection = 'common', top = 500, method='logFC', cex=1, 
@@ -316,6 +284,7 @@ Run python script provided by StringTie to generate 2 CSV files containing the c
     print(mds500_pichu)
     dev.off()
     
+    # top 10,000 genes, colored by sulfidic vs. non-sulfidic   
     pdf("MDSplot_10000genes_PICHU_colored_by_habitat.pdf")
     par(cex.axis = 1.1, cex = 1.25)
     mds10000_pichu <- plotMDS(y_pichu, gene.selection = 'common', top = 10000, method='logFC', cex=1, 
@@ -330,17 +299,9 @@ Run python script provided by StringTie to generate 2 CSV files containing the c
     print(mds10000_pichu)
     dev.off()
     
-    #######################################
-    ####### Graphing Library Size #########
-    #######################################
-    
-    # create color vector for graph
+    # Graph library size, colored by sulfidic vs. non-sulfidic
     colors_pichu <- c(rep("blue",6),rep("yellow",6))
-    
-    # las=2 makes label text perpendicular to axis
     par(las=2)
-    
-    # generate plot
     pdf("library_size_PICHU.pdf")
     library_pichu <- barplot(y_pichu$samples$lib.size, col=colors_pichu, 
                        cex.axis=.8, ylab = "Library Size", xlab = "Sample")
@@ -351,66 +312,27 @@ Run python script provided by StringTie to generate 2 CSV files containing the c
     print(library_pichu)
     dev.off()
     
-    ####################################
-    ########## Design Matrix ###########
-    ####################################
-    
-    fac_pichu <- c(rep("fresh",6), rep("sulfur",6)) # use this to get groups
-    
-    fac_pichu <- factor(fac_pichu) # renames fac names with numbers
-    
-    design_pichu <- model.matrix(~0+fac_pichu) # 0 is the intercept
-    
+    # Design Matrix
+    fac_pichu <- c(rep("fresh",6), rep("sulfur",6))
+    fac_pichu <- factor(fac_pichu)
+    design_pichu <- model.matrix(~0+fac_pichu)
     colnames(design_pichu) <- levels(fac_pichu)
     
-    design_pichu
-    
-    ###################################################
-    ####### Estimating Dispersions - CR method ########
-    ###################################################
-    
+    # Estimating Dispersions - CR method
     # Uses GLM instead of qCML method because testing multiple factors here
-    
     # Uses Cox-Reid profile-adjusted likelihood
-    
-    # estimates common dispersion and tagwise dispersions in one run
     y_pichu <- estimateDisp(y_pichu, design_pichu)
     
-    # common dispersions
-    y_pichu$common.dispersion
-    
-    # tagwise (gene-specific dispersions)
-    summary(y_pichu$tagwise.dispersion)
-    
-    # estimated prior degrees of freedom
-    y_pichu$prior.df
-    
-    ###########################
-    ####### BCV Plot ##########
-    ###########################
-    
-    # BCV is the coefficient of variation with which the (unknown) true abundance of the gene varies between replicate RNA samples
-    
+    # BCV Plot
     pdf("BCV_PICHU.pdf")
     BCV_pichu <- plotBCV(y_pichu)
     print(BCV_pichu)
     dev.off()
     
-    ###############################################
-    ####### DGE - Quasi-Likelihood F-test #########
-    ###############################################
-    
-    # quasi-likelihood F-test better for bulk RNA-seq data because stricter error rate control, accounts for
-      # uncertainty in dispersion estimation
-    
+    # Differential Gene Expression - Quasi-Likelihood F-test
     group_pichu <- factor(c(1,1,1,1,1,1,2,2,2,2,2,2))
-    
     design_pichu <- model.matrix(~0+group_pichu)
-    
-    # QL model representing the study design fitted to the data
     fit_pichu <- glmQLFit(y_pichu, design_pichu)
-    
-    # tests use FDR < 0.05
     
     # compare FRESH (1) vs SULFUR (2)
     qlf_pichu <- glmQLFTest(fit_pichu, contrast=c(-1,1))
@@ -419,58 +341,23 @@ Run python script provided by StringTie to generate 2 CSV files containing the c
     require(xlsx)
     write.csv(x=fresh.vs.sulf_pichu, file = "fresh.vs.sulf_PICHU.csv")
     
-    #####################################################################################################################################
-    #### PUYACATENGO ####################################################################################################################
-    #####################################################################################################################################
+    #### PUYACATENGO DRAINAGE
     
-    ###################################
-    ####  Create grouping factor  #####
-    ###################################
-    
-    # to be incorporated later into the DGEList
-    
+    # Create grouping factor to be incorporated later into the DGEList
     group_puya = c(rep("fresh",6),rep("sulfur",5))
     
-    ##########################################################
-    ####  Remove rows where counts = 0 across all samples ####
-    ##########################################################
+    # Remove rows where counts = 0 across all samples
+    total_puya <- puya[rowSums(puya) > 0,]
     
-    dim(puya)
-    # 31791 genes before removing the 0 counts
-    
-    total_puya <- puya[rowSums(puya) > 0,] # trim out any rows with no reads counts
-    
-    dim(total_puya)
-    # 25223 genes after removing the 0 counts
-    
-    ###################################
-    ####  Creating DGEList object  ####
-    ###################################
-    
+    # Creating DGEList object
     y_puya <- DGEList(counts=total_puya, group=group_puya)
     
-    #########################
-    ####  Normalization  ####
-    #########################
+    # Normalization, creates effective library sizes
+    y_puya <- calcNormFactors(y_puya)
     
-    # Normalization for RNA composition (i.e. prevents genes from appearing falsely downregulated)
+    # Multidimensional Scaling (MDS) Plot
     
-    # Creates effective library sizes
-    
-    y_puya <- calcNormFactors(y_puya) # calculates normalization factors to scale raw library sizes, TMM is default method
-    
-    y_puya$samples # shows library sizes and normalization factors
-    
-    #######################################################
-    ######## Multidimensional Scaling (MDS) Plot  #########
-    #######################################################
-    
-    # gene.selection = 'common' selects the same genes for all comparisons
-    
-    # method='logFC' required with gene.selection argument
-    
-    # top = 500 plots the top 500 genes (this is the default)
-    
+    # top 500 genes, colored by sulfidic vs. non-sulfidic
     pdf("MDSplot_500genes_PUYA_colored_by_habitat.pdf")
     par(cex.axis = 1.1, cex = 1.25)
     mds500_puya <- plotMDS(y_puya, gene.selection = 'common', top = 500, method='logFC', cex=1, 
@@ -485,6 +372,7 @@ Run python script provided by StringTie to generate 2 CSV files containing the c
     print(mds500_puya)
     dev.off()
     
+    # top 10,000 genes, colored by sulfidic vs. non-sulfidic
     pdf("MDSplot_10000genes_PUYA_colored_by_habitat.pdf")
     par(cex.axis = 1.1, cex = 1.25)
     mds10000_puya <- plotMDS(y_puya, gene.selection = 'common', top = 10000, method='logFC', cex=1, 
@@ -499,60 +387,25 @@ Run python script provided by StringTie to generate 2 CSV files containing the c
     print(mds10000_pichu)
     dev.off()
     
-    ################################################################################################################################################
-    #### Take out Puyacatengo sample 51 because looks like outlier #################################################################################
-    ################################################################################################################################################
-    
+    # Took out Puyacatengo sample 51 because looks like an outlier
     puya_minus51 <- puya[,-5]
     
-    ###################################
-    ####  Create grouping factor  #####
-    ###################################
-    
-    # to be incorporated later into the DGEList
-    
+    # Create grouping factor to be incorporated later into the DGEList
     group_puya_minus51 = c(rep("fresh",5),rep("sulfur",5))
     
-    ##########################################################
-    ####  Remove rows where counts = 0 across all samples ####
-    ##########################################################
+    # Remove rows where counts = 0 across all samples ####
+
+    total_puya_minus51 <- puya_minus51[rowSums(puya_minus51) > 0,]
     
-    dim(puya_minus51)
-    # 31791 genes before removing the 0 counts
-    
-    total_puya_minus51 <- puya_minus51[rowSums(puya_minus51) > 0,] # trim out any rows with no reads counts
-    
-    dim(total_puya_minus51)
-    # 24905 genes after removing the 0 counts
-    
-    ###################################
-    ####  Creating DGEList object  ####
-    ###################################
-    
+    # Creating DGEList object
     y_puya_minus51 <- DGEList(counts=total_puya_minus51, group=group_puya_minus51)
     
-    #########################
-    ####  Normalization  ####
-    #########################
+    # Normalization, creates effective library sizes
+    y_puya_minus51 <- calcNormFactors(y_puya_minus51)
+  
+    # Multidimensional Scaling (MDS) Plot
     
-    # Normalization for RNA composition (i.e. prevents genes from appearing falsely downregulated)
-    
-    # Creates effective library sizes
-    
-    y_puya_minus51 <- calcNormFactors(y_puya_minus51) # calculates normalization factors to scale raw library sizes, TMM is default method
-    
-    y_puya_minus51$samples # shows library sizes and normalization factors
-    
-    #######################################################
-    ######## Multidimensional Scaling (MDS) Plot  #########
-    #######################################################
-    
-    # gene.selection = 'common' selects the same genes for all comparisons
-    
-    # method='logFC' required with gene.selection argument
-    
-    # top = 500 plots the top 500 genes (this is the default)
-    
+    # top 500 genes, colored by sulfidic vs. non-sulfidic
     pdf("MDSplot_500genes_PUYA_minus51_colored_by_habitat.pdf")
     par(cex.axis = 1.1, cex = 1.25)
     mds500_puya_minus51 <- plotMDS(y_puya_minus51, gene.selection = 'common', top = 500, method='logFC', cex=1, 
@@ -567,6 +420,7 @@ Run python script provided by StringTie to generate 2 CSV files containing the c
     print(mds500_puya_minus51)
     dev.off()
     
+    # top 10,000 genes, colored by sulfidic vs. non-sulfidic
     pdf("MDSplot_10000genes_PUYA_minus51_colored_by_habitat.pdf")
     par(cex.axis = 1.1, cex = 1.25)
     mds10000_puya_minus51 <- plotMDS(y_puya_minus51, gene.selection = 'common', top = 10000, method='logFC', cex=1, 
@@ -581,17 +435,9 @@ Run python script provided by StringTie to generate 2 CSV files containing the c
     print(mds10000_pichu)
     dev.off()
     
-    #######################################
-    ####### Graphing Library Size #########
-    #######################################
-    
-    # create color vector for graph
+    # Graphing Library Size
     colors_puya_minus51 <- c(rep("blue",5),rep("yellow",5))
-    
-    # las=2 makes label text perpendicular to axis
     par(las=2)
-    
-    # generate plot
     pdf("library_size_PUYA_minus51.pdf")
     library_puya_minus51 <- barplot(y_puya_minus51$samples$lib.size, col=colors_puya_minus51, 
                              cex.axis=.8, ylab = "Library Size", xlab = "Sample")
@@ -602,26 +448,14 @@ Run python script provided by StringTie to generate 2 CSV files containing the c
     print(library_puya_minus51)
     dev.off()
     
-    ####################################
-    ########## Design Matrix ###########
-    ####################################
-    
-    fac_puya_minus51 <- c(rep("fresh",5), rep("sulfur",5)) # use this to get groups
-    
-    fac_puya_minus51 <- factor(fac_puya_minus51) # renames fac names with numbers
-    
-    design_puya_minus51 <- model.matrix(~0+fac_puya_minus51) # 0 is the intercept
-    
+    # Design Matrix
+    fac_puya_minus51 <- c(rep("fresh",5), rep("sulfur",5))
+    fac_puya_minus51 <- factor(fac_puya_minus51)
+    design_puya_minus51 <- model.matrix(~0+fac_puya_minus51)
     colnames(design_puya_minus51) <- levels(fac_puya_minus51)
     
-    design_puya_minus51
-    
-    ###################################################
-    ####### Estimating Dispersions - CR method ########
-    ###################################################
-    
+    # Estimating Dispersions
     # Uses GLM instead of qCML method because testing multiple factors here
-    
     # Uses Cox-Reid profile-adjusted likelihood
     
     # estimates common dispersion and tagwise dispersions in one run
