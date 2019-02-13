@@ -68,113 +68,57 @@ Map reads to the previously indexed reference genome.
     sample2_read1.fq.gz   sample2_read2.fq.gz	sample2
     sample3_read1.fq.gz	  sample3_read2.fq.gz	sample3
 
-## Convert to BAM and sorting using SAMtools
+## 5. Convert to BAM and sort using SAMtools
     
     while read line || [ -n "$line" ];
     do
     	sampleName=$(echo $line | awk '{print $1}')
     
-    samtools view -b -h -S /data/kelley/projects/kerry/mx_rna_seq/2_hisat2/$sampleName.sam > /data/kelley/projects/kerry/mx_rna_seq/3_samtools/$sampleName.bam
+    samtools view -b -h -S $sampleName.sam > $sampleName.bam
     
-    samtools sort /data/kelley/projects/kerry/mx_rna_seq/3_samtools/$sampleName.bam -o /data/kelley/projects/kerry/mx_rna_seq/3_samtools/$sampleName.sorted.bam
+    samtools sort $sampleName.bam -o $sampleName.sorted.bam
     
-    done < /data/kelley/projects/kerry/mx_rna_seq/3_samtools/scripts/sampleNames.txt
+    done < samples.txt
     
-    # Top rows of sampleNames.txt
-    MX02.q33
-    MX03.q33
-    MX04.q33
+    # Top rows of samples.txt
+    sample1
+    sample2
+    sample3
 
-## Generating GTF files using StringTie
+## 6. Generating GTF files using StringTie
 
-##### Script is /data/kelley/projects/kerry/mx_rna_seq/4_stringtie/scripts/stringtie.sh
-
-    #!/bin/bash
-    #SBATCH --partition=popgenom
-    #SBATCH --job-name=stringtie
-    #SBATCH --cpus-per-task=4
-    #SBATCH --output=/data/kelley/projects/kerry/mx_rna_seq/4_stringtie/scripts/stringtie.out
-    #SBATCH --error=/data/kelley/projects/kerry/mx_rna_seq/4_stringtie/scripts/stringtie.err
-    #SBATCH --workdir=/data/kelley/projects/kerry/mx_rna_seq/4_stringtie
-    #SBATCH --mail-type=END,FAIL
-    #SBATCH --mail-user=kerry.mcgowan@wsu.edu
-    
-    # PURPOSE: Generate GTF files in a ballgown folder.
+Generate GTF files in a ballgown folder.
     
     while read line || [ -n "$line" ];
     do
     	sampleName=$(echo $line | awk '{print $1}')
     
-    mkdir -p /data/kelley/projects/kerry/mx_rna_seq/4_stringtie/ballgown
+    mkdir -p ballgown
     
-    mkdir -p /data/kelley/projects/kerry/mx_rna_seq/4_stringtie/ballgown/$sampleName
+    mkdir -p ballgown/$sampleName
     
-    stringtie \
-    	/data/kelley/projects/kerry/mx_rna_seq/3_samtools/$sampleName.sorted.bam \
-    	-o /data/kelley/projects/kerry/mx_rna_seq/4_stringtie/ballgown/$sampleName/$sampleName.gtf \
-    	-p 4 \
-    	-G /data/kelley/projects/anthonys_projects/pmex_genome_resequencing/reference_genome_pmex/GCF_001443325.1_P_mexicana-1.0_genomic.gff \
-    	-B \
-    	-e
+    stringtie $sampleName.sorted.bam -o $sampleName.gtf -p 4 -G reference.gff -B -e
     
-    done < /data/kelley/projects/kerry/mx_rna_seq/4_stringtie/scripts/sampleNames.txt
+    done < samples.txt
 
-    # Top rows of sampleNames.txt
-    MX02.q33
-    MX03.q33
-    MX04.q33
+    # Top rows of samples.txt
+    sample1
+    sample2
+    sample3
 
-## Generating a gene counts matrix (gene_count_matrix.csv) using prepDE.py (from StringTie)
+## 7. Generating a gene counts matrix (gene_count_matrix.csv) using prepDE.py (from StringTie)
 
-##### Re-downlowaded prepDE.py script from the link in the StringTie manual and called it prepDE_20190115.py
+Run python script provided by StringTie to generate 2 CSV files containing the count matrices for genes and transcripts.
 
-##### NOTE: Sample 78 was removed before stringtie.sh from /data/kelley/projects/kerry/mx_rna_seq/4_stringtie/ballgown into ballgown_removed_samples because it was from a cave population
-
-##### Script is /data/kelley/projects/kerry/mx_rna_seq/5_prepDE/scripts/prepDE.sh
-
-    #!/bin/bash
-    #SBATCH --partition=popgenom
-    #SBATCH --job-name=prepDE
-    #SBATCH --output=/data/kelley/projects/kerry/mx_rna_seq/5_prepDE/scripts/prepDE.out
-    #SBATCH --error=/data/kelley/projects/kerry/mx_rna_seq/5_prepDE/scripts/prepDE.err
-    #SBATCH --workdir=/data/kelley/projects/kerry/mx_rna_seq/5_prepDE
-    #SBATCH --mail-type=END,FAIL
-    #SBATCH --mail-user=kerry.mcgowan@wsu.edu
-    
-    #Purpose: Runs python script provided by StringTie to generate 2 CSV files containing the count matrices for genes and transcripts
-    
-    # Note what the working directory is set to
-    
-    # -i <path to stringtie output>
-    # -g <where to output gene matrix>
-    # -t <where to output transcript matrix>
-    
-    
-    
     module load python/2.7.10
     
-    python /data/kelley/projects/kerry/mx_rna_seq/5_prepDE/scripts/prepDE_20190115.py \
-    	-i /data/kelley/projects/kerry/mx_rna_seq/4_stringtie/ballgown \
-    	-g /data/kelley/projects/kerry/mx_rna_seq/5_prepDE/gene_count_matrix.csv \
-    	-t /data/kelley/projects/kerry/mx_rna_seq/5_prepDE/transcript_count_matrix.csv
+    python prepDE.py -i ballgown -g gene_count_matrix.csv -t transcript_count_matrix.csv
         
-## Differential gene expression analyses using EdgeR
+## 8. Differential gene expression analyses using EdgeR
 
-    #############################
-    #### Pmex EdgeR Analysis #### 
-    #############################
+    data <- read.csv("gene_count_matrix.csv", row.names=1)
     
-    ####################################
-    #### Read in CSV of Gene Counts ####
-    ####################################
-    
-    setwd('~/Documents/WSU/RESEARCH/convergent_evo_MX/5_prepDE/')
-    data <- read.csv("gene_count_matrix.csv",row.names=1) # this is w/o cave sample #78
-    
-    #############################
-    #### Change Column Names ####
-    #############################
-    
+    # Change column names
     names(data)[1] <- "MX02"
     names(data)[2] <- "MX03"
     names(data)[3] <- "MX04"
@@ -210,80 +154,31 @@ Map reads to the previously indexed reference genome.
     names(data)[33] <- "MX75"
     names(data)[34] <- "MX76"
     names(data)[35] <- "MX77"
+   
+    # Package Installation
+    source("https://bioconductor.org/biocLite.R")
+    biocLite("edgeR")
+    biocLite("limma")
     
-    ###############################
-    #### Set Working Directory ####
-    ###############################
-    
-    setwd('~/Documents/WSU/RESEARCH/convergent_evo_MX/6_edgeR/')
-    
-    ##############################
-    #### Package Installation ####
-    ##############################
-    
-    # install EdgeR and limma, only have to do this the first time unless you update the version of R
-    
-    # source("https://bioconductor.org/biocLite.R")
-    # biocLite("edgeR")
-    # biocLite("limma")
-    
-    #######################
-    #### Load Packages ####
-    #######################
-    
-    # load EdgeR and limma
-    
+    # Load Packages
     require("limma")
     require("edgeR")
     
-    ###################################
-    ####  Create grouping factor  #####
-    ###################################
-    
-    # to be incorporated later into the DGEList
-    
+    # Create grouping factor to be incorporated later into the DGEList, grouped by drainage
     group = c(rep("Pich",12),rep("Puya",11),rep("Taco",12))
     
-    ##########################################################
-    ####  Remove rows where counts = 0 across all samples ####
-    ##########################################################
-    
-    dim(data)
-      # 31791 genes before removing the 0 counts
-    
-    total <- data[rowSums(data) > 0,] # trim out any rows with no reads counts
-    
-    dim(total)
-      # 26817 genes after removing the 0 counts
-    
-    ###################################
-    ####  Creating DGEList object  ####
-    ###################################
-    
+    # Remove rows where counts = 0 across all samples
+    total <- data[rowSums(data) > 0,]
+
+    # Creating DGEList object 
     y <- DGEList(counts=total, group=group)
     
-    #########################
-    ####  Normalization  ####
-    #########################
+    # Normalization, creates effective library sizes
+    y <- calcNormFactors(y)
     
-    # Normalization for RNA composition (i.e. prevents genes from appearing falsely downregulated)
-    
-    # Creates effective library sizes
-    
-    y <- calcNormFactors(y) # calculates normalization factors to scale raw library sizes, TMM is default method
-    
-    y$samples # shows library sizes and normalization factors
-    
-    #######################################################
-    ######## Multidimensional Scaling (MDS) Plot  #########
-    #######################################################
-    
-    # gene.selection = 'common' selects the same genes for all comparisons
-    
-    # method='logFC' required with gene.selection argument
-    
-    # top = 500 plots the top 500 genes (this is the default)
-    
+    # Multidimensional Scaling (MDS) Plot
+
+    # top 500 genes
     pdf("MDSplot_500genes_colored_by_drainage.pdf")
     par(cex.axis = 1.1, cex = 1.25)
     mds500 <- plotMDS(y, gene.selection = 'common', top = 500, method='logFC', cex=1, 
@@ -297,7 +192,8 @@ Map reads to the previously indexed reference genome.
            pt.cex=1.75)
     print(mds500)
     dev.off()
-      
+    
+    # top 10,000 genes
     pdf("MDSplot_10000genes_colored_by_drainage.pdf")
     par(cex.axis = 1.1, cex = 1.25)
     mds10000 <- plotMDS(y, gene.selection = 'common', top = 10000, method='logFC', cex=1, 
