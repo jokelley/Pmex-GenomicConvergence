@@ -1,4 +1,4 @@
-# Analysis pipeline used to generate candidate gene set
+# Pipeline used to generate candidate gene set
 
 ## 1. Trim with TrimGalore
     
@@ -11,12 +11,12 @@ Trim reads using TrimGalore default settings.
     
     trim_galore --fastqc_args "--noextract --nogroup" --output_dir <path to output directory> --paired $read1 $read2
     
-    done < <path to sample list>.txt
+    done < samples.txt
     
-    # Top rows of sample list text file
-    sample1_read1.fastq.gz	sample1_read2.fastq.gz
-    sample2_read1.fastq.gz	sample2_read2.fastq.gz
-    sample3_read1.fastq.gz	sample3_read2.fastq.gz
+    # Top rows of samples.txt
+    sample1_read1.fastq.gz   sample1_read2.fastq.gz
+    sample2_read1.fastq.gz   sample2_read2.fastq.gz
+    sample3_read1.fastq.gz   sample3_read2.fastq.gz
 
 ## 2. Pre-process with Cufflinks gffread
 
@@ -44,24 +44,13 @@ Build an index using the reference genome.
     
     hisat2-build -f <reference_in> --ss splice_sites.txt --exon exons.txt <ht2_base>
 
-## Mapping using HISAT2
+## 4. Map using HISAT2
 
-##### Script is /data/kelley/projects/kerry/mx_rna_seq/2_hisat2/scripts/mapping.sh
-
-    #!/bin/bash
-    #SBATCH --job-name=mapping
-    #SBATCH --partition=cas
-    #SBATCH --output=/data/kelley/projects/kerry/mx_rna_seq/2_hisat2/scripts/mapping.out
-    #SBATCH --error=/data/kelley/projects/kerry/mx_rna_seq/2_hisat2/scripts/mapping.err
-    #SBATCH --workdir=/data/kelley/projects/kerry/mx_rna_seq/2_hisat2
-    #SBATCH --mail-user=kerry.mcgowan@wsu.edu
-    #SBATCH --mail-type=BEGIN,END,FAIL
+Map reads to the previously indexed reference genome.
     
-    # PURPOSE: Map reads to the previously indexed reference genome.
+    mkdir -p stats
     
-    mkdir -p /data/kelley/projects/kerry/mx_rna_seq/2_hisat2/stats
-    
-    mkdir -p /data/kelley/projects/kerry/mx_rna_seq/2_hisat2/unmapped
+    mkdir -p unmapped
     
     while read line || [ -n "$line" ];
     do
@@ -69,42 +58,17 @@ Build an index using the reference genome.
     	read2=$(echo $line | awk '{print $2}')
     	filename=$(echo $line | awk '{print $3}')
     
-    hisat2 \
-    	--phred33 \
-    	-k 10 \
-    	--met-file /data/kelley/projects/kerry/mx_rna_seq/2_hisat2/stats/$filename.stats \
-    	--rg-id $filename \
-    	--rg SM:$filename \
-    	--rg PL:illumina \
-    	-p 1 \
-    	--rna-strandness RF \
-    	--fr \
-    	--dta \
-    	--un-conc-gz /data/kelley/projects/kerry/mx_rna_seq/2_hisat2/unmapped/$filename.unmapped \
-    	-x /data/kelley/projects/anthonys_projects/pmex_genome_resequencing/reference_genome_pmex/GCF_001443325.1_P_mexicana-1.0_genomic \
-    	-1 /data/kelley/projects/kerry/mx_rna_seq/1_trimgalore/$read1 \
-    	-2 /data/kelley/projects/kerry/mx_rna_seq/1_trimgalore/$read2 \
-    	-S /data/kelley/projects/kerry/mx_rna_seq/2_hisat2/$filename.sam
+    hisat2 --phred33 -k 10 --met-file $filename.stats --rg-id $filename --rg SM:$filename --rg PL:illumina -p 1 --rna-strandness RF --fr \
+    	--dta --un-conc-gz $filename.unmapped -x <hisat2-idx> -1 $read1 -2 $read2 -S $filename.sam
     
-    done < /data/kelley/projects/kerry/mx_rna_seq/2_hisat2/scripts/MXsamples.txt
+    done < samples.txt
     
-    # Top rows of MXsample_list.txt
-    MX02_1.q33_val_1.fq.gz	MX02_2.q33_val_2.fq.gz	MX02.q33
-    MX03_1.q33_val_1.fq.gz	MX03_2.q33_val_2.fq.gz	MX03.q33
-    MX04_1.q33_val_1.fq.gz	MX04_2.q33_val_2.fq.gz	MX04.q33
+    # Top rows of samples.txt
+    sample1_read1.fq.gz	  sample1_read2.fq.gz   sample1
+    sample2_read1.fq.gz   sample2_read2.fq.gz	sample2
+    sample3_read1.fq.gz	  sample3_read2.fq.gz	sample3
 
-## Converting to BAM and sorting using SAMtools
-
-##### Script is /data/kelley/projects/kerry/mx_rna_seq/3_samtools/scripts/samtools_view_sort_loop.sh
-
-    #!/bin/bash
-    #SBATCH --partition=popgenom
-    #SBATCH --job-name=samtools
-    #SBATCH --output=/data/kelley/projects/kerry/mx_rna_seq/3_samtools/scripts/samtools.out
-    #SBATCH --error=/data/kelley/projects/kerry/mx_rna_seq/3_samtools/scripts/samtools.err
-    #SBATCH --workdir=/data/kelley/projects/kerry/mx_rna_seq/3_samtools
-    #SBATCH --mail-type=END,FAIL
-    #SBATCH --mail-user=kerry.mcgowan@wsu.edu
+## Convert to BAM and sorting using SAMtools
     
     while read line || [ -n "$line" ];
     do
