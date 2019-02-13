@@ -1,18 +1,12 @@
 # Analysis pipeline used to generate Figure S3
 
-## Trimming with TrimGalore
-
-##### Script is /data/kelley/projects/kerry/mx_rna_seq/1_trimgalore/scripts/trim.sh
-    #!/bin/bash
-    #SBATCH --job-name=trim
-    #SBATCH --partition=kamiak
-    #SBATCH --output=/data/kelley/projects/kerry/mx_rna_seq/1_trimgalore/scripts/trim.out
-    #SBATCH --error=/data/kelley/projects/kerry/mx_rna_seq/1_trimgalore/scripts/trim.err
-    #SBATCH --workdir=/data/kelley/projects/kerry/mx_rna_seq/1_trimgalore
-    #SBATCH --mail-user=kerry.mcgowan@wsu.edu
-    #SBATCH --mail-type=BEGIN,END,FAIL
+################################################################################
+#
+##   1. Trimming with TrimGalore
+#
+################################################################################
     
-    # PURPOSE: Trim reads using TrimGalore default settings.
+### Trim reads using TrimGalore default settings.
     
     while read line || [ -n "$line" ];
     do
@@ -32,12 +26,14 @@
     MX03_1.q33.fastq.gz	MX03_2.q33.fastq.gz
     MX04_1.q33.fastq.gz	MX04_2.q33.fastq.gz
     MX05_1.q33.fastq.gz	MX05_2.q33.fastq.gz
- 
- ## Pre-processing with Cufflinks gffread
- 
-     # Need to change the GFF file into a GTF file otherwise it won't work with the HISAT2 python script in the next step
-     # *Be careful not to overwrite the orignal GFF file (I made a copy)
-     # Did this in an idev
+
+################################################################################
+#
+## Pre-processing with Cufflinks gffread
+#
+################################################################################
+
+#### Change the GFF file into a GTF file otherwise it won't work with the HISAT2 python script in the next step
      
      gffread GCF_001443325.1_P_mexicana-1.0_genomic_copy.gff -T -o GCF_001443325.1_P_mexicana-1.0_genomic_copy.gtf
      
