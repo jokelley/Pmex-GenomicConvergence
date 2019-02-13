@@ -255,19 +255,23 @@ Split dataframes by drainage
     
 PICHUCALCO DRAINAGE
     
-    # Create grouping factor to be incorporated later into the DGEList
+Create grouping factor to be incorporated later into the DGEList
+
     group_pichu = c(rep("fresh",6),rep("sulfur",6))
     
-    # Remove rows where counts = 0 across all samples
+Remove rows where counts = 0 across all samples
+
     total_pichu <- pichu[rowSums(pichu) > 0,]
     
-    # Creating DGEList object
+Creating DGEList object
+
     y_pichu <- DGEList(counts=total_pichu, group=group_pichu)
     
-    # Normalization, creates effective library sizes
+Normalization, creates effective library sizes
+
     y_pichu <- calcNormFactors(y_pichu)
 
-    # Multidimensional Scaling (MDS) Plot
+Multidimensional Scaling (MDS) Plot
     
     # top 500 genes, colored by sulfidic vs. non-sulfidic   
     pdf("MDSplot_500genes_PICHU_colored_by_habitat.pdf")
@@ -299,7 +303,8 @@ PICHUCALCO DRAINAGE
     print(mds10000_pichu)
     dev.off()
     
-    # Graph library size, colored by sulfidic vs. non-sulfidic
+Graph library size, colored by sulfidic vs. non-sulfidic
+
     colors_pichu <- c(rep("blue",6),rep("yellow",6))
     par(las=2)
     pdf("library_size_PICHU.pdf")
@@ -312,50 +317,58 @@ PICHUCALCO DRAINAGE
     print(library_pichu)
     dev.off()
     
-    # Design Matrix
+Design Matrix
+
     fac_pichu <- c(rep("fresh",6), rep("sulfur",6))
     fac_pichu <- factor(fac_pichu)
     design_pichu <- model.matrix(~0+fac_pichu)
     colnames(design_pichu) <- levels(fac_pichu)
     
-    # Estimating Dispersions - CR method
-    # Uses GLM instead of qCML method because testing multiple factors here
-    # Uses Cox-Reid profile-adjusted likelihood
+Estimating Dispersions - CR method
+Uses GLM instead of qCML method because testing multiple factors.
+Uses Cox-Reid profile-adjusted likelihood.
+
     y_pichu <- estimateDisp(y_pichu, design_pichu)
     
-    # BCV Plot
+BCV Plot
+
     pdf("BCV_PICHU.pdf")
     BCV_pichu <- plotBCV(y_pichu)
     print(BCV_pichu)
     dev.off()
     
-    # Differential Gene Expression - Quasi-Likelihood F-test
+Differential Gene Expression - Quasi-Likelihood F-test
+
     group_pichu <- factor(c(1,1,1,1,1,1,2,2,2,2,2,2))
     design_pichu <- model.matrix(~0+group_pichu)
     fit_pichu <- glmQLFit(y_pichu, design_pichu)
     
-    # compare FRESH (1) vs SULFUR (2)
+    # compare SULFIDIC (1) to NON-SULFIDIC (-1)
     qlf_pichu <- glmQLFTest(fit_pichu, contrast=c(-1,1))
     fresh.vs.sulf_pichu <- topTags(qlf_pichu, n = 5000, p.value=0.05)
     fresh.vs.sulf_pichu <- data.frame(fresh.vs.sulf_pichu)
     require(xlsx)
     write.csv(x=fresh.vs.sulf_pichu, file = "fresh.vs.sulf_PICHU.csv")
     
-    #### PUYACATENGO DRAINAGE
+PUYACATENGO DRAINAGE
     
-    # Create grouping factor to be incorporated later into the DGEList
+Create grouping factor to be incorporated later into the DGEList
+
     group_puya = c(rep("fresh",6),rep("sulfur",5))
     
-    # Remove rows where counts = 0 across all samples
+Remove rows where counts = 0 across all samples
+
     total_puya <- puya[rowSums(puya) > 0,]
     
-    # Creating DGEList object
+Creating DGEList object
+
     y_puya <- DGEList(counts=total_puya, group=group_puya)
     
-    # Normalization, creates effective library sizes
+Normalization, creates effective library sizes
+
     y_puya <- calcNormFactors(y_puya)
     
-    # Multidimensional Scaling (MDS) Plot
+Multidimensional Scaling (MDS) Plot
     
     # top 500 genes, colored by sulfidic vs. non-sulfidic
     pdf("MDSplot_500genes_PUYA_colored_by_habitat.pdf")
@@ -387,23 +400,27 @@ PICHUCALCO DRAINAGE
     print(mds10000_pichu)
     dev.off()
     
-    # Took out Puyacatengo sample 51 because looks like an outlier
+Took out Puyacatengo sample 51 because looks like an outlier
+
     puya_minus51 <- puya[,-5]
     
-    # Create grouping factor to be incorporated later into the DGEList
+Create grouping factor to be incorporated later into the DGEList
+
     group_puya_minus51 = c(rep("fresh",5),rep("sulfur",5))
     
-    # Remove rows where counts = 0 across all samples ####
+Remove rows where counts = 0 across all samples ####
 
     total_puya_minus51 <- puya_minus51[rowSums(puya_minus51) > 0,]
     
-    # Creating DGEList object
+Creating DGEList object
+
     y_puya_minus51 <- DGEList(counts=total_puya_minus51, group=group_puya_minus51)
     
-    # Normalization, creates effective library sizes
+Normalization, creates effective library sizes
+
     y_puya_minus51 <- calcNormFactors(y_puya_minus51)
   
-    # Multidimensional Scaling (MDS) Plot
+Multidimensional Scaling (MDS) Plot
     
     # top 500 genes, colored by sulfidic vs. non-sulfidic
     pdf("MDSplot_500genes_PUYA_minus51_colored_by_habitat.pdf")
@@ -435,7 +452,8 @@ PICHUCALCO DRAINAGE
     print(mds10000_pichu)
     dev.off()
     
-    # Graphing Library Size
+Graphing Library Size
+
     colors_puya_minus51 <- c(rep("blue",5),rep("yellow",5))
     par(las=2)
     pdf("library_size_PUYA_minus51.pdf")
@@ -448,114 +466,60 @@ PICHUCALCO DRAINAGE
     print(library_puya_minus51)
     dev.off()
     
-    # Design Matrix
+Design Matrix
+
     fac_puya_minus51 <- c(rep("fresh",5), rep("sulfur",5))
     fac_puya_minus51 <- factor(fac_puya_minus51)
     design_puya_minus51 <- model.matrix(~0+fac_puya_minus51)
     colnames(design_puya_minus51) <- levels(fac_puya_minus51)
     
-    # Estimating Dispersions
-    # Uses GLM instead of qCML method because testing multiple factors here
-    # Uses Cox-Reid profile-adjusted likelihood
+Estimating Dispersions
+Uses GLM instead of qCML method because testing multiple factors.
+Uses Cox-Reid profile-adjusted likelihood.
     
-    # estimates common dispersion and tagwise dispersions in one run
     y_puya_minus51 <- estimateDisp(y_puya_minus51, design_puya_minus51)
     
-    # common dispersions
-    y_puya_minus51$common.dispersion
-    
-    # tagwise (gene-specific dispersions)
-    summary(y_puya_minus51$tagwise.dispersion)
-    
-    # estimated prior degrees of freedom
-    y_puya_minus51$prior.df
-    
-    ###########################
-    ####### BCV Plot ##########
-    ###########################
-    
-    # BCV is the coefficient of variation with which the (unknown) true abundance of the gene varies between replicate RNA samples
+BCV Plot
     
     pdf("BCV_PUYA_minus51.pdf")
     BCV_puya_minus51 <- plotBCV(y_puya_minus51)
     print(BCV_puya_minus51)
     dev.off()
     
-    ###############################################
-    ####### DGE - Quasi-Likelihood F-test #########
-    ###############################################
-    
-    # quasi-likelihood F-test better for bulk RNA-seq data because stricter error rate control, accounts for
-    # uncertainty in dispersion estimation
-    
+Differential Gene Expression - Quasi-Likelihood F-test
+
     group_puya_minus51 <- factor(c(1,1,1,1,1,2,2,2,2,2))
     
     design_puya_minus51 <- model.matrix(~0+group_puya_minus51)
-    
-    # QL model representing the study design fitted to the data
-    fit_puya_minus51 <- glmQLFit(y_puya_minus51, design_puya_minus51)
-    
-    # tests use FDR < 0.05
-    
-    # compare FRESH (1) vs SULFUR (2)
+
+    # compare SULFIDIC (1) to NON-SULFIDIC (-1)
     qlf_puya_minus51 <- glmQLFTest(fit_puya_minus51, contrast=c(-1,1))
     fresh.vs.sulf_puya_minus51 <- topTags(qlf_puya_minus51, n = 5000, p.value=0.05)
     fresh.vs.sulf_puya_minus51 <- data.frame(fresh.vs.sulf_puya_minus51)
     require(xlsx)
     write.csv(x=fresh.vs.sulf_puya_minus51, file = "fresh.vs.sulf_PUYA_minus51.csv")
     
-    ########################################################################################################################
-    #### TACOTALPA #########################################################################################################
-    ########################################################################################################################
+TACOTALPA DRAINAGE
     
-    ###################################
-    ####  Create grouping factor  #####
-    ###################################
-    
-    # to be incorporated later into the DGEList
+Create grouping factor to be incorporated later into the DGEList
     
     group_taco = c(rep("fresh",6),rep("sulfur",6))
     
-    ##########################################################
-    ####  Remove rows where counts = 0 across all samples ####
-    ##########################################################
+Remove rows where counts = 0 across all samples
     
-    dim(taco)
-    # 31791 genes before removing the 0 counts
-    
-    total_taco <- taco[rowSums(taco) > 0,] # trim out any rows with no reads counts
-    
-    dim(total_taco)
-    # 24988 genes after removing the 0 counts
-    
-    ###################################
-    ####  Creating DGEList object  ####
-    ###################################
+    total_taco <- taco[rowSums(taco) > 0,]
+
+Creating DGEList object
     
     y_taco <- DGEList(counts=total_taco, group=group_taco)
     
-    #########################
-    ####  Normalization  ####
-    #########################
+Normalization, creates effective library sizes
     
-    # Normalization for RNA composition (i.e. prevents genes from appearing falsely downregulated)
+    y_taco <- calcNormFactors(y_taco)
     
-    # Creates effective library sizes
+Multidimensional Scaling (MDS) Plot
     
-    y_taco <- calcNormFactors(y_taco) # calculates normalization factors to scale raw library sizes, TMM is default method
-    
-    y_taco$samples # shows library sizes and normalization factors
-    
-    #######################################################
-    ######## Multidimensional Scaling (MDS) Plot  #########
-    #######################################################
-    
-    # gene.selection = 'common' selects the same genes for all comparisons
-    
-    # method='logFC' required with gene.selection argument
-    
-    # top = 500 plots the top 500 genes (this is the default)
-    
+    # top 500 genes, colored by sulfidic vs. non-sulfidic
     pdf("MDSplot_500genes_TACO_colored_by_habitat.pdf")
     par(cex.axis = 1.1, cex = 1.25)
     mds500_taco <- plotMDS(y_taco, gene.selection = 'common', top = 500, method='logFC', cex=1, 
@@ -570,6 +534,7 @@ PICHUCALCO DRAINAGE
     print(mds500_taco)
     dev.off()
     
+    # top 10,000 genes, colored by sulfidic vs. non-sulfidic
     pdf("MDSplot_10000genes_TACO_colored_by_habitat.pdf")
     par(cex.axis = 1.1, cex = 1.25)
     mds10000_taco <- plotMDS(y_taco, gene.selection = 'common', top = 10000, method='logFC', cex=1, 
@@ -584,17 +549,10 @@ PICHUCALCO DRAINAGE
     print(mds10000_taco)
     dev.off()
     
-    #######################################
-    ####### Graphing Library Size #########
-    #######################################
-    
-    # create color vector for graph
+Graphing Library Size
+
     colors_taco <- c(rep("blue",6),rep("yellow",6))
-    
-    # las=2 makes label text perpendicular to axis
     par(las=2)
-    
-    # generate plot
     pdf("library_size_TACO.pdf")
     library_taco <- barplot(y_taco$samples$lib.size, col=colors_taco, 
                              cex.axis=.8, ylab = "Library Size", xlab = "Sample")
@@ -605,98 +563,56 @@ PICHUCALCO DRAINAGE
     print(library_taco)
     dev.off()
     
-    ####################################
-    ########## Design Matrix ###########
-    ####################################
-    
-    fac_taco <- c(rep("fresh",6), rep("sulfur",6)) # use this to get groups
-    
-    fac_taco <- factor(fac_taco) # renames fac names with numbers
-    
-    design_taco <- model.matrix(~0+fac_taco) # 0 is the intercept
-    
+Design Matrix
+
+    fac_taco <- c(rep("fresh",6), rep("sulfur",6))
+    fac_taco <- factor(fac_taco)
+    design_taco <- model.matrix(~0+fac_taco)
     colnames(design_taco) <- levels(fac_taco)
     
-    design_taco
+Estimating Dispersions
+Uses GLM instead of qCML method because testing multiple factors.
+Uses Cox-Reid profile-adjusted likelihood.
     
-    ###################################################
-    ####### Estimating Dispersions - CR method ########
-    ###################################################
-    
-    # Uses GLM instead of qCML method because testing multiple factors here
-    
-    # Uses Cox-Reid profile-adjusted likelihood
-    
-    # estimates common dispersion and tagwise dispersions in one run
     y_taco <- estimateDisp(y_taco, design_taco)
     
-    # common dispersions
-    y_taco$common.dispersion
-    
-    # tagwise (gene-specific dispersions)
-    summary(y_taco$tagwise.dispersion)
-    
-    # estimated prior degrees of freedom
-    y_taco$prior.df
-    
-    ###########################
-    ####### BCV Plot ##########
-    ###########################
-    
-    # BCV is the coefficient of variation with which the (unknown) true abundance of the gene varies between replicate RNA samples
-    
+BCV Plot
+
     pdf("BCV_TACO.pdf")
     BCV_taco <- plotBCV(y_taco)
     print(BCV_taco)
     dev.off()
     
-    ###############################################
-    ####### DGE - Quasi-Likelihood F-test #########
-    ###############################################
-    
-    # quasi-likelihood F-test better for bulk RNA-seq data because stricter error rate control, accounts for
-    # uncertainty in dispersion estimation
+Differential Gene Expression - Quasi-Likelihood F-test
     
     group_taco <- factor(c(1,1,1,1,1,1,2,2,2,2,2,2))
-    
     design_taco <- model.matrix(~0+group_taco)
-    
-    # QL model representing the study design fitted to the data
     fit_taco <- glmQLFit(y_taco, design_taco)
-    
-    # tests use FDR < 0.05
-    
-    # compare FRESH (1) vs SULFUR (2)
+    # compare SULFIDIC (1) to NON-SULFIDIC (-1)
     qlf_taco <- glmQLFTest(fit_taco, contrast=c(-1,1))
     fresh.vs.sulf_taco <- topTags(qlf_taco, n = 5000, p.value=0.05)
     fresh.vs.sulf_taco <- data.frame(fresh.vs.sulf_taco)
     require(xlsx)
     write.csv(x=fresh.vs.sulf_taco, file = "fresh.vs.sulf_TACO.csv")
     
-    ####################################################################################################################################################
-    #### Separate significantly upregulated and downregulated genes ####################################################################################
-    ####################################################################################################################################################
+Separate significantly upregulated and downregulated genes 
     
     # Pichucalco
     pichu_up = rownames(fresh.vs.sulf_pichu[fresh.vs.sulf_pichu$logFC > 0,])
-    
     pichu_down = rownames(fresh.vs.sulf_pichu[fresh.vs.sulf_pichu$logFC < 0,])
     
     # Puyacatengo
     puya_up = rownames(fresh.vs.sulf_puya_minus51[fresh.vs.sulf_puya_minus51$logFC > 0,])
-    
     puya_down = rownames(fresh.vs.sulf_puya_minus51[fresh.vs.sulf_puya_minus51$logFC < 0,])
     
     # Tacotalpa
     taco_up = rownames(fresh.vs.sulf_taco[fresh.vs.sulf_taco$logFC > 0,])
-    
     taco_down = rownames(fresh.vs.sulf_taco[fresh.vs.sulf_taco$logFC < 0,])
     
-    #######################
-    #### Venn Diagrams ####
-    #######################
+Venn Diagram
     
-    # Upregulated
+Upregulated genes
+
     universe.up <- unique(c(pichu_up, puya_up, taco_up))
     
     GroupA <- universe.up %in% pichu_up
@@ -714,7 +630,8 @@ PICHUCALCO DRAINAGE
     
     Q1all.up <- universe.up[which(input.df["Pichu"] == T & input.df["Puya"] == T & input.df["Taco"] == T)]
     
-    # Downregulated
+Downregulated genes
+
     universe.down <- unique(c(pichu_down, puya_down, taco_down))
     
     GroupD <- universe.down %in% pichu_down
@@ -732,15 +649,14 @@ PICHUCALCO DRAINAGE
     
     Q1all.down <- universe.down[which(input.df2["Pichu"] == T & input.df2["Puya"] == T & input.df2["Taco"] == T)]
     
-    ###################################
-    #### Getting BLAST annotations ####
-    ###################################
+Get BLAST annotations
     
     BLAST <- read.csv("Table S2 - Poecilia mexicana Annotations.csv")
     
     BLAST_annot <- subset(BLAST, select = c(gene.ID, Subject.sequence.ID, Protein.annotations, gene.name, E.value))
     
-    # Upregulated
+Upregulated genes
+
     Q1all.UP <- data.frame(Q1all.up)
     
     # add column heading that matches the blast output (Table S2 - Poecilia mexicana Annotations.csv)
@@ -750,8 +666,9 @@ PICHUCALCO DRAINAGE
     # extract swissprot accessions (subject sequence IDs) and Protein annotations from Blast output based on transcript IDs (query sequence IDs)
     All_candidates.up <- merge(BLAST_annot[, c("gene.ID", "Subject.sequence.ID", "Protein.annotations", "gene.name", "E.value")], Q1all.UP, by = "gene.ID", all.y = TRUE)
     write.csv(x=All_candidates.up, file = "All_candidates.up.csv")
-    
-    # Downregulated
+
+Downregulated genes
+
     Q1all.DOWN <- data.frame(Q1all.down)
     
     # add column heading that matches the blast output (Table S2 - Poecilia mexicana Annotations.csv)
