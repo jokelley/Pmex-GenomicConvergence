@@ -1,4 +1,4 @@
-# Analysis pipeline used to generate Figure S3
+# Analysis pipeline used to generate candidate gene set
 
 ## 1. Trim with TrimGalore
     
