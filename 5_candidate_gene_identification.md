@@ -63,8 +63,8 @@ Map reads to the previously indexed reference genome.
     
     # Top rows of samples.txt
     sample1_read1.fq.gz   sample1_read2.fq.gz   sample1
-    sample2_read1.fq.gz   sample2_read2.fq.gz	sample2
-    sample3_read1.fq.gz   sample3_read2.fq.gz	sample3
+    sample2_read1.fq.gz   sample2_read2.fq.gz   sample2
+    sample3_read1.fq.gz   sample3_read2.fq.gz   sample3
 
 ## 5. Convert to BAM and sort using SAMtools
     
