@@ -22,22 +22,20 @@ Trim reads using TrimGalore default settings.
 
 Change the reference genome GFF file into a GTF file otherwise it won't work with the HISAT2 python script in the next step.
      
-     gffread <gff_in> -T -o reference.gtf
+     gffread <gff_in> -T -o <gtf_out>
 
 ## 3. Index the reference genome with HISAT2
 
-Make fiiles using python scripts provided by HISAT2 for the --ss and --exon options.
+Make files using python scripts provided by HISAT2 for the --ss and --exon options.
 
 Extract splice sites from reference GTF file prior to building the index:
     
     module load python/2.7.10
-    
     hisat2_extract_splice_sites.py <gtf_in> > splice_sites.txt
 
-Also extract exons from pmex GTF file prior to building the index.
+Also extract exons from pmex GTF file prior to building the index:
     
     module load python/2.7.10
-    
     hisat2_extract_exons.py <gtf_in> > exons.txt
 
 Build an index using the reference genome.
@@ -253,7 +251,7 @@ Split dataframes by drainage
     # Tacotalpa drainage
     taco <- data[,24:35]
     
-PICHUCALCO DRAINAGE
+---- PICHUCALCO DRAINAGE
     
 Create grouping factor to be incorporated later into the DGEList
 
@@ -350,7 +348,7 @@ Differential Gene Expression - Quasi-Likelihood F-test
     require(xlsx)
     write.csv(x=fresh.vs.sulf_pichu, file = "fresh.vs.sulf_PICHU.csv")
     
-PUYACATENGO DRAINAGE
+---- PUYACATENGO DRAINAGE
     
 Create grouping factor to be incorporated later into the DGEList
 
@@ -499,7 +497,7 @@ Differential Gene Expression - Quasi-Likelihood F-test
     require(xlsx)
     write.csv(x=fresh.vs.sulf_puya_minus51, file = "fresh.vs.sulf_PUYA_minus51.csv")
     
-TACOTALPA DRAINAGE
+---- TACOTALPA DRAINAGE
     
 Create grouping factor to be incorporated later into the DGEList
     
