@@ -2,7 +2,7 @@
 
 ## 1. Set up SVMerge Configuration file
 
-Here is an example SVMerge config file (configfile)
+Here is an example SVMerge config file (configfile).
 All cutoffs and scoring criteria were suggested by the SVMerge manual
 
 	project=project # The name of your project directory
