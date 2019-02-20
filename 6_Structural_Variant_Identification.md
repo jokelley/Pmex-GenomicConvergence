@@ -58,18 +58,18 @@ To filter out these reads from your BAM file(s), for each scaffold, use the samf
 
 	samfilter.sh bamfile [scaffold] 1
 
-This produces sam files for each scaffold called [scaffold].se.sam
+This produces sam files for each scaffold called [scaffold].se.sam.
 These files are used as input into SECluster (included with SVMerge)
 
 	SECluster.pl -f [scaffold].se.sam -q 20 -m 5 -c 5 -r [scaffold] > name.[scaffold].clusters
 
-q=read mapping quality [20 is the recommended value]
-m=minimum reads to form a cluster [5 is the recommended value]
+q=read mapping quality [20 is the recommended value],
+m=minimum reads to form a cluster [5 is the recommended value],
 c=minimum reads in each forward and reverse cluster [5 is the recommended value]
 
 ## 6. Filter and merge calls
 
-Filter and merge calls from the different SV callers
+Filter and merge calls from the different SV callers.
 From your main working directory, use the filterAndMerge.pl script included with SVMerge
 
 	filterAndMerge.pl -c configfile
@@ -85,8 +85,8 @@ Create a configuration file using the coord2config.pl script included with SVMer
 
 The output from this are files names sv.config.1, sv.config2, etc.
 
-Run the local assemblies and alignments using the svAssemble.pl script included with SVMerge
-Depending on the number of sv.config files (which depends on the number of SVs in your raw set), it would be worthwhile to run this as an array or loop
+Run the local assemblies and alignments using the svAssemble.pl script included with SVMerge.
+Depending on the number of sv.config files (which depends on the number of SVs in your raw set), it would be worthwhile to run this as an array or loop.
 
 	cd /project/version/svdir/localAssemblies/
 	svAssemble.pl config/sv.config.1 <path_to_samtools>
@@ -96,23 +96,23 @@ Depending on the number of sv.config files (which depends on the number of SVs i
 ## 8. Parse alignments
 
 The alignments are parsed for contigs which provided evidence for SV breakpoints
-(e.g. a contig with a deletion will align with a large gap)
+(e.g. a contig with a deletion will align with a large gap).
 
-First, prepare the input files with the splitFile.sh script included with SVMerge
-This splits the merged SV file into separate files (sample.merged.tab.1, sample.merged.tab.2, etc.) containing 500 SVs each
+First, prepare the input files with the splitFile.sh script included with SVMerge.
+This splits the merged SV file into separate files (sample.merged.tab.1, sample.merged.tab.2, etc.) containing 500 SVs each.
 
 	cd /project/version/svdir/localAssemblies/
 	splitFile.sh ../merged/sample.merged.bed 500
 
-Next, parse the alignments with the runParser.pl script included with SVMerge
+Next, parse the alignments with the runParser.pl script included with SVMerge.
 
 	cd /project/version/svdir/localAssemblies/
 	runParser.pl -s sample.merged.tab.1 -c configfile > alignparse.1
 	$EXEDIR/runParser.pl -s sample.merged.tab.2 -c configfile > alignparse.2
 	...
 
-Next, concatenate the files, then parse the output
-The parseBoundary.pl script is included with SVMerge
+Next, concatenate the files, then parse the output.
+The parseBoundary.pl script is included with SVMerge.
 
 	cd /project/version/svdir/localAssemblies/.
 	cat alignparse.* > alignparse
@@ -129,8 +129,8 @@ The resulting files are as follows (found in /project/version/svdir/final/):
 
 ## 9. Merge final call set
 
-This step is to identify overlapping SV calls (also called complex SVs)
-The mergeFinalCalls.pl script is included with SVMerge
+This step is to identify overlapping SV calls (also called complex SVs).
+The mergeFinalCalls.pl script is included with SVMerge.
 
 	cd /project/version/svdir/final/
 	mergeFinalCalls.pl -f sv.final.rank1.tab -c configfile > sv.final.rank1.merged.tab
